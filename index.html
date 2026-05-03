@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐻 Bloch-Bear — Quantum Computing</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0F0F1E;--panel:#0A1E3F;--border:#1a3a6e;--cyan:#00D9FF;--purple:#7B3FA0;--green:#22C55E;--red:#FF6B6B;--text:#E8E8F0;--muted:#4a6fa5;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
+#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:998;transition:opacity 0.7s;}
+.bb{font-size:80px;animation:bounce 1.6s ease-in-out infinite;display:block;margin-bottom:8px;}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-22px)}}
+#loading h1{font-family:'IBM Plex Mono',monospace;font-size:2.3em;color:var(--cyan);margin-bottom:5px;}
+#loading p{color:var(--muted);font-size:0.88em;margin-bottom:34px;}
+.pw{width:320px;background:#1a2f55;border-radius:20px;height:10px;overflow:hidden;margin-bottom:12px;}
+.pb{height:100%;background:linear-gradient(90deg,#1d4ed8,var(--cyan));border-radius:20px;width:0%;transition:width 0.5s;}
+#lmsg{color:var(--cyan);font-family:'IBM Plex Mono',monospace;font-size:0.8em;text-align:center;min-height:20px;}
+#app{display:none;height:100vh;flex-direction:column;}
+header{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:1.1em;font-weight:600;}.logo span{color:var(--cyan);}
+.tag{font-size:0.68em;color:var(--muted);}
+.hpill{margin-left:auto;background:rgba(0,217,255,0.1);border:1px solid rgba(0,217,255,0.3);border-radius:20px;padding:4px 13px;font-size:0.68em;color:var(--cyan);display:flex;align-items:center;gap:6px;}
+.hdot{width:6px;height:6px;background:var(--green);border-radius:50%;box-shadow:0 0 6px var(--green);}
+.body{display:flex;flex:1;overflow:hidden;}
+aside{width:185px;background:#080f22;border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
+.albl{padding:13px 12px 5px;font-size:0.6em;color:var(--muted);font-weight:700;letter-spacing:0.1em;text-transform:uppercase;}
+.mb{padding:10px 12px;cursor:pointer;border-left:3px solid transparent;border-bottom:1px solid rgba(255,255,255,0.04);background:none;text-align:left;width:100%;border-right:none;border-top:none;transition:all 0.15s;}
+.mb:hover{background:rgba(0,217,255,0.05);}
+.mb.active{border-left-color:var(--cyan);background:rgba(0,217,255,0.08);}
+.mn{font-size:0.64em;color:var(--muted);display:block;margin-bottom:2px;}
+.mt{font-size:0.78em;color:#94a3b8;}
+.mb.active .mt{color:var(--cyan);font-weight:600;}
+.ibox{margin:auto 12px 14px;background:rgba(29,78,216,0.1);border:1px solid rgba(29,78,216,0.3);border-radius:7px;padding:9px;}
+.ibox .it{font-size:0.6em;color:#60a5fa;font-weight:700;margin-bottom:3px;}
+.ibox .ib{font-size:0.67em;color:#7dd3fc;line-height:1.4;}
+main{flex:1;display:flex;overflow:hidden;min-width:0;}
+.lp{width:50%;border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;background:#080f22;}
+.ph{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 17px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.pt{font-family:'IBM Plex Mono',monospace;font-size:0.88em;font-weight:600;}
+.tabs{display:flex;gap:5px;}
+.tab{padding:4px 11px;border:none;border-radius:6px;cursor:pointer;font-size:0.71em;font-weight:600;background:rgba(255,255,255,0.05);color:#64748b;transition:all 0.15s;font-family:'IBM Plex Sans',sans-serif;}
+.tab.active{background:rgba(0,217,255,0.15);color:var(--cyan);outline:1px solid rgba(0,217,255,0.3);}
+.cp{padding:17px;overflow-y:auto;flex:1;font-size:0.86em;color:#cbd5e1;line-height:1.75;}
+.cp h3{color:var(--cyan);font-family:'IBM Plex Mono',monospace;font-size:0.86em;margin:13px 0 6px;}
+.cp strong{color:var(--text);}
+.cp code{background:#1a2744;padding:2px 5px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:0.83em;color:#7dd3fc;}
+.an{background:rgba(123,63,160,0.1);border:1px solid rgba(123,63,160,0.3);border-radius:8px;padding:10px 13px;margin:11px 0;font-style:italic;color:#c4b5fd;font-size:0.88em;}
+.bs-btn{background:rgba(0,217,255,0.1);border:1px solid rgba(0,217,255,0.35);color:var(--cyan);padding:8px 16px;border-radius:8px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;font-size:0.82em;font-weight:600;margin-top:14px;transition:all 0.15s;display:inline-block;}
+.bs-btn:hover{background:rgba(0,217,255,0.2);}
+.sl{margin-top:16px;}
+.slbl{font-size:0.63em;color:var(--muted);font-weight:700;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:7px;}
+.sbtn{display:block;width:100%;text-align:left;margin-bottom:6px;padding:8px 11px;background:rgba(29,78,216,0.08);border:1px solid rgba(29,78,216,0.25);border-radius:7px;color:#93c5fd;font-size:0.78em;cursor:pointer;transition:all 0.15s;font-family:'IBM Plex Sans',sans-serif;}
+.sbtn:hover{background:rgba(29,78,216,0.18);}
+.cdp{padding:13px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:9px;}
+.ew{background:var(--panel);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.eb{background:#0d1f3c;border-bottom:1px solid var(--border);padding:7px 12px;display:flex;align-items:center;justify-content:space-between;}
+.dots{display:flex;gap:5px;}
+.dr{width:10px;height:10px;border-radius:50%;background:#ff5f57;}
+.dy{width:10px;height:10px;border-radius:50%;background:#febc2e;}
+.dg{width:10px;height:10px;border-radius:50%;background:#28c840;}
+.fn{font-size:0.66em;color:var(--muted);font-family:'IBM Plex Mono',monospace;}
+.cbtn{background:none;border:1px solid var(--border);color:var(--muted);border-radius:4px;padding:2px 8px;font-size:0.64em;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all 0.15s;}
+.cbtn:hover{color:var(--cyan);border-color:var(--cyan);}
+#ce{width:100%;background:#0a1628;color:#7dd3fc;border:none;outline:none;font-family:'IBM Plex Mono',monospace;font-size:0.76em;line-height:1.6;padding:12px;resize:vertical;min-height:185px;tab-size:4;}
+.rr{display:flex;gap:7px;}
+.rb{flex:1;padding:9px;background:linear-gradient(135deg,#16a34a,var(--green));border:none;border-radius:8px;color:white;font-size:0.83em;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;box-shadow:0 0 10px rgba(34,197,94,0.2);transition:all 0.15s;}
+.rb:hover{transform:translateY(-1px);box-shadow:0 0 16px rgba(34,197,94,0.35);}
+.rb:disabled{background:#1a3a2a;color:#2d6a42;cursor:not-allowed;box-shadow:none;transform:none;}
+.ab{padding:9px 12px;background:rgba(29,78,216,0.15);border:1px solid rgba(29,78,216,0.35);border-radius:8px;color:#93c5fd;font-size:0.78em;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;transition:all 0.15s;}
+.ab:hover{background:rgba(29,78,216,0.25);}
+.ol{font-size:0.66em;color:var(--muted);}
+.ob{background:#060d1f;border:1px solid var(--border);border-radius:8px;padding:11px;font-family:'IBM Plex Mono',monospace;font-size:0.75em;min-height:65px;color:#86efac;white-space:pre-wrap;word-break:break-word;}
+.ob.err{color:var(--red);}
+#oi{max-width:100%;border-radius:8px;margin-top:6px;display:none;}
+.rp{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#060d1f;}
+.ch{background:var(--panel);border-bottom:1px solid var(--border);padding:10px 17px;display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#8B4513,#a0522d);display:flex;align-items:center;justify-content:center;font-size:0.95em;box-shadow:0 0 8px rgba(139,69,19,0.35);flex-shrink:0;}
+.ct{font-weight:600;font-size:0.91em;}
+.cs{font-size:0.66em;color:var(--muted);}
+#msgs{flex:1;overflow-y:auto;padding:13px;display:flex;flex-direction:column;gap:10px;}
+.msg{display:flex;gap:7px;animation:fu 0.2s ease;}
+@keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.msg.u{justify-content:flex-end;}
+.mav{width:24px;height:24px;border-radius:50%;flex-shrink:0;margin-top:2px;background:linear-gradient(135deg,#8B4513,#a0522d);display:flex;align-items:center;justify-content:center;font-size:0.72em;}
+.bub{max-width:80%;padding:9px 12px;border-radius:4px 12px 12px 12px;background:rgba(14,24,46,0.95);border:1px solid var(--border);font-size:0.82em;line-height:1.65;}
+.msg.u .bub{background:linear-gradient(135deg,#1d4ed8,#1e40af);border:none;border-radius:12px 12px 4px 12px;}
+.bub code{background:#1a2744;padding:1px 4px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:0.83em;color:#7dd3fc;}
+.bub strong{color:white;}
+.typ{display:flex;gap:5px;align-items:center;padding:9px 12px;background:rgba(14,24,46,0.95);border:1px solid var(--border);border-radius:4px 12px 12px 12px;width:fit-content;}
+.td{width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:tp 1.2s infinite;}
+.td:nth-child(2){animation-delay:0.3s}.td:nth-child(3){animation-delay:0.6s}
+@keyframes tp{0%,60%,100%{opacity:0.2;transform:scale(0.8)}30%{opacity:1;transform:scale(1.2)}}
+.ir{padding:10px 14px;border-top:1px solid var(--border);background:#080f22;display:flex;gap:7px;align-items:flex-end;flex-shrink:0;}
+#ci{flex:1;padding:9px 12px;background:var(--panel);border:1px solid var(--border);border-radius:9px;color:var(--text);font-size:0.83em;resize:none;outline:none;font-family:'IBM Plex Sans',sans-serif;line-height:1.5;max-height:88px;}
+#ci:focus{border-color:rgba(0,217,255,0.4);}
+.sb{width:37px;height:37px;border-radius:9px;border:none;background:linear-gradient(135deg,#1d4ed8,var(--cyan));color:white;cursor:pointer;font-size:1em;display:flex;align-items:center;justify-content:center;box-shadow:0 0 9px rgba(0,217,255,0.22);transition:all 0.15s;flex-shrink:0;}
+.sb:hover{transform:translateY(-1px);}
+.sb:disabled{background:#1a2744;box-shadow:none;cursor:not-allowed;}
+/* BLOCH SPHERE OVERLAY */
+#bs-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;}
+#bs-overlay.open{display:flex;}
+.bs-modal{position:relative;border-radius:16px;overflow:hidden;width:520px;height:460px;flex-shrink:0;}
+#bc{display:block;cursor:grab;width:100%;height:100%;}
+.bs-lbl{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;pointer-events:none;}
+#bl0{color:var(--cyan);}
+#bl1{color:var(--purple);}
+#blx{color:var(--red);font-size:12px;}
+#bly{color:var(--green);font-size:12px;}
+.bs-brand{position:absolute;top:10px;left:14px;font-size:20px;pointer-events:none;}
+.bs-brand-txt{position:absolute;top:12px;left:40px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#4a6fa5;pointer-events:none;}
+.bs-close{position:absolute;top:9px;right:10px;background:rgba(255,255,255,0.08);border:1px solid var(--border);color:#94a3b8;border-radius:6px;padding:3px 10px;cursor:pointer;font-size:0.78em;font-family:'IBM Plex Sans',sans-serif;}
+.bs-close:hover{color:var(--cyan);border-color:var(--cyan);}
+.bs-controls{width:520px;display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.bs-ctrl{background:rgba(10,30,63,0.95);border:1px solid var(--border);border-radius:8px;padding:10px 14px;}
+.bs-ctrl-lbl{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.bs-ctrl-row{display:flex;align-items:center;gap:8px;}
+.bs-ctrl-row input[type=range]{flex:1;}
+.bs-ctrl-val{font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--text);min-width:36px;text-align:right;}
+#bs-state{font-family:'IBM Plex Mono',monospace;font-size:13px;color:#7dd3fc;background:rgba(10,30,63,0.95);border:1px solid var(--border);border-radius:8px;padding:8px 16px;width:520px;text-align:center;}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#1a3055;border-radius:10px}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading">
+  <span class="bb">🐻</span>
+  <h1>Bloch-Bear</h1>
+  <p>Your warm & fuzzy guide to quantum computing 🐾</p>
+  <div class="pw"><div class="pb" id="pb"></div></div>
+  <div id="lmsg">Starting up...</div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header>
+    <div style="font-size:1.5em">🐻</div>
+    <div><div class="logo">Bloch<span>-Bear</span></div><div class="tag">Powered by IBM Bob · Quantum Education Platform 🐾</div></div>
+    <div class="hpill"><span class="hdot"></span>Quantum Simulator Ready</div>
+  </header>
+  <div class="body">
+    <aside>
+      <div class="albl">Curriculum</div>
+      <button class="mb active" onclick="selMs(0)"><span class="mn">Milestone 1</span><span class="mt">🌌 Why Quantum?</span></button>
+      <button class="mb" onclick="selMs(1)"><span class="mn">Milestone 2</span><span class="mt">⚛️ Qubits</span></button>
+      <button class="mb" onclick="selMs(2)"><span class="mn">Milestone 3</span><span class="mt">🔧 Gates & Circuits</span></button>
+      <button class="mb" onclick="selMs(3)"><span class="mn">Milestone 4</span><span class="mt">📊 Noise</span></button>
+      <button class="mb" onclick="selMs(4)"><span class="mn">Milestone 5</span><span class="mt">🚀 QAOA</span></button>
+      <div class="ibox"><div class="it">IBM QUANTUM</div><div class="ib">Built with IBM Bob watsonx.ai — learn here, then run on real IBM Quantum hardware</div></div>
+    </aside>
+    <main>
+      <div class="lp">
+        <div class="ph">
+          <div class="pt" id="pt">🌌 Why Quantum Computing Exists</div>
+          <div class="tabs">
+            <button class="tab active" onclick="showTab('concept')">📖 Concept</button>
+            <button class="tab" onclick="showTab('code')">💻 Code</button>
+          </div>
+        </div>
+        <div id="tc" class="cp"><div id="cb"></div><div class="sl"><div class="slbl">Ask Bloch →</div><div id="sl"></div></div></div>
+        <div id="tcd" class="cdp" style="display:none">
+          <div class="ew">
+            <div class="eb">
+              <div class="dots"><div class="dr"></div><div class="dy"></div><div class="dg"></div></div>
+              <div class="fn">quantum_circuit.py</div>
+              <button class="cbtn" onclick="copyCode()">Copy</button>
+            </div>
+            <textarea id="ce" spellcheck="false"></textarea>
+          </div>
+          <div class="rr">
+            <button class="rb" id="rb" onclick="runCode()">▶ Run Code 🐾</button>
+            <button class="ab" onclick="askOut()">🐻 Ask Bloch</button>
+          </div>
+          <div class="ol">Output:</div>
+          <div class="ob" id="ob">Click "▶ Run Code 🐾" to execute your quantum simulation! ⚛️</div>
+          <img id="oi" />
+        </div>
+      </div>
+      <div class="rp">
+        <div class="ch">
+          <div class="av">🐻</div>
+          <div><div class="ct">Bloch</div><div class="cs">Your quantum bear tutor · IBM Bob</div></div>
+        </div>
+        <div id="msgs"></div>
+        <div class="ir">
+          <textarea id="ci" rows="1" placeholder="Ask Bloch anything about quantum..."></textarea>
+          <button class="sb" id="sb" onclick="send()">→</button>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- BLOCH SPHERE OVERLAY -->
+<div id="bs-overlay" onclick="if(event.target===this)closeSphere()">
+  <div class="bs-modal">
+    <canvas id="bc"></canvas>
+    <div id="bl0" class="bs-lbl">|0⟩</div>
+    <div id="bl1" class="bs-lbl">|1⟩</div>
+    <div id="blx" class="bs-lbl">x</div>
+    <div id="bly" class="bs-lbl">y</div>
+    <div class="bs-brand">🐻</div>
+    <div class="bs-brand-txt">Bloch sphere · drag to rotate</div>
+    <button class="bs-close" onclick="closeSphere()">✕ close</button>
+  </div>
+  <div class="bs-controls">
+    <div class="bs-ctrl">
+      <div class="bs-ctrl-lbl">θ — polar angle</div>
+      <div class="bs-ctrl-row">
+        <input type="range" min="0" max="180" value="50" id="stheta" oninput="bsTheta(this.value)">
+        <span class="bs-ctrl-val" id="vtheta">50°</span>
+      </div>
+    </div>
+    <div class="bs-ctrl">
+      <div class="bs-ctrl-lbl">φ — azimuthal angle</div>
+      <div class="bs-ctrl-row">
+        <input type="range" min="0" max="360" value="45" id="sphi" oninput="bsPhi(this.value)">
+        <span class="bs-ctrl-val" id="vphi">45°</span>
+      </div>
+    </div>
+  </div>
+  <div id="bs-state">|ψ⟩ = ...</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script>
+// ── CURRICULUM ────────────────────────────────────────────────────────────────
+const MS=[
+{title:"🌌 Why Quantum Computing Exists",
+concept:`<h3>The Exponential Gap</h3>
+Classical computers are extraordinary — 100 billion transistors, 5 billion ops/sec. But some problems get <strong>exponentially</strong> harder as they scale.
+<br><br>The classic example — <strong>searching an unsorted database</strong>:
+<ul style="margin:8px 0 8px 18px;line-height:2.1">
+<li>Classical search: <code>O(N)</code> — check each item one by one</li>
+<li>Quantum (Grover's algorithm): <code>O(√N)</code></li>
+<li>For 1 trillion records: 1 trillion vs <strong>1 million steps</strong></li>
+</ul>
+<div class="an">🐾 <em>Think of your ML training dataset. If it has 1 trillion rows and you need one specific record, a classical computer scans every row. Grover's quantum algorithm finds it in 1 million steps — a 1,000,000x speedup.</em></div>
+<h3>Feynman's 1981 Challenge</h3>
+Feynman asked: can classical computers simulate quantum mechanics? His answer: <strong>no</strong>. For 300 particles, the state space requires more memory than atoms in the observable universe. He proposed building computers that are quantum mechanical from the start. That sparked the entire field.`,
+sug:["Why can't we just build faster classical computers?","What is Grover's algorithm exactly?","Is quantum always faster than classical?"],
+code:`import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+sizes = np.array([100,1_000,10_000,100_000,1_000_000,1_000_000_000,1_000_000_000_000])
+classical = sizes
+quantum = np.sqrt(sizes)
+
+fig, ax = plt.subplots(figsize=(9,5), facecolor='#0A1E3F')
+ax.set_facecolor('#0A1E3F')
+ax.loglog(sizes, classical, 'o-', color='#FF6B6B', lw=2.5, ms=7, label='Classical: O(N)')
+ax.loglog(sizes, quantum, 's-', color='#00D9FF', lw=2.5, ms=7, label='Quantum: O(√N) Grover')
+ax.fill_between(sizes, quantum, classical, alpha=0.1, color='#00D9FF')
+ax.set_xlabel('Database Size (N)', color='white', fontsize=11)
+ax.set_ylabel('Steps Required', color='white', fontsize=11)
+ax.set_title('Why Quantum? The Exponential Gap', color='white', fontsize=13)
+ax.tick_params(colors='white')
+ax.legend(facecolor='#1A1A2E', labelcolor='white', fontsize=10)
+for s in ax.spines.values(): s.set_edgecolor('#00D9FF')
+ax.grid(True, alpha=0.15, color='#1a3a6e')
+plt.tight_layout()
+
+print("Quantum speedup table:")
+print(f"{'N':>20} | {'Classical':>15} | {'Quantum':>12} | {'Speedup':>10}")
+print("-"*65)
+for n in [1_000, 1_000_000, 1_000_000_000, 1_000_000_000_000]:
+    q = int(np.sqrt(n))
+    print(f"{n:>20,} | {n:>15,} | {q:>12,} | {n//q:>9,}x")`
+},
+{title:"⚛️ What Is a Qubit?",
+concept:`<h3>Classical Bits vs Qubits</h3>
+A classical bit is <strong>definite</strong>: exactly 0 or 1. Always.
+<br><br>A qubit is in <strong>superposition</strong>: both 0 and 1 simultaneously, each with a probability weight. When measured, it collapses to one value.
+<br><br>Mathematically: <code>|ψ⟩ = α|0⟩ + β|1⟩</code>
+<ul style="margin:8px 0 8px 18px;line-height:2.1">
+<li><code>|α|²</code> = probability of measuring 0</li>
+<li><code>|β|²</code> = probability of measuring 1</li>
+<li><code>|α|² + |β|² = 1</code> always</li>
+</ul>
+<div class="an">🐾 <em>A qubit before measurement is exactly like a Bernoulli random variable — it holds a probability distribution. Measuring it samples from that distribution. The Hadamard gate creates a uniform Bernoulli(0.5). Qubits are distributions, not values.</em></div>
+<h3>The Bloch Sphere</h3>
+Every possible qubit state lives on the surface of a unit sphere — the <strong>Bloch sphere</strong>. The north pole is |0⟩, the south pole is |1⟩, and every superposition is a point on the surface. Quantum gates rotate the state around this sphere.
+<br><br><button class="bs-btn" onclick="openSphere()">⚛️ Open Interactive 3D Bloch Sphere</button>`,
+sug:["What is the Bloch sphere?","Why does measuring destroy superposition?","What does the Hadamard gate do geometrically?"],
+code:`import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+def hadamard(psi):
+    H = np.array([[1,1],[1,-1]], dtype=complex) / np.sqrt(2)
+    return H @ psi
+
+def ry(psi, theta):
+    R = np.array([[np.cos(theta/2), -np.sin(theta/2)],
+                  [np.sin(theta/2),  np.cos(theta/2)]], dtype=complex)
+    return R @ psi
+
+def measure(psi, shots=1000):
+    p0 = float(abs(psi[0])**2)
+    results = np.random.choice([0,1], size=shots, p=[p0, 1-p0])
+    return {'0': int(np.sum(results==0)), '1': int(np.sum(results==1))}
+
+psi = np.array([1.0+0j, 0.0+0j])
+print(f"Initial state |0>:  P(0)={abs(psi[0])**2:.0%}, P(1)={abs(psi[1])**2:.0%}")
+
+psi_h = hadamard(psi)
+print(f"After Hadamard:     P(0)={abs(psi_h[0])**2:.1%}, P(1)={abs(psi_h[1])**2:.1%}")
+counts = measure(psi_h, shots=1000)
+print(f"1000 measurements: |0>={counts['0']}, |1>={counts['1']}")
+print("  → Just like sampling Bernoulli(0.5) 1000 times!")
+
+psi_biased = ry(np.array([1.0+0j, 0.0+0j]), np.pi/3)
+print(f"\\nRy(π/3) biased:     P(0)={abs(psi_biased[0])**2:.1%}, P(1)={abs(psi_biased[1])**2:.1%}")
+counts2 = measure(psi_biased, shots=1000)
+print(f"1000 measurements: |0>={counts2['0']}, |1>={counts2['1']}")
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10,4), facecolor='#0A1E3F')
+for ax in [ax1, ax2]:
+    ax.set_facecolor('#0A1E3F'); ax.tick_params(colors='white')
+    for s in ax.spines.values(): s.set_edgecolor('#00D9FF')
+ax1.bar(['|0⟩','|1⟩'], [counts['0'],counts['1']], color=['#7B3FA0','#00D9FF'], edgecolor='white', width=0.4)
+ax1.set_title('Hadamard: Uniform Superposition', color='white', fontsize=11)
+ax1.set_ylabel('Count (1000 shots)', color='white')
+ax1.axhline(500, color='white', linestyle='--', alpha=0.3)
+ax2.bar(['|0⟩','|1⟩'], [counts2['0'],counts2['1']], color=['#7B3FA0','#FF6B6B'], edgecolor='white', width=0.4)
+ax2.set_title('Ry(π/3): Biased Superposition', color='white', fontsize=11)
+ax2.set_ylabel('Count (1000 shots)', color='white')
+plt.suptitle('Qubits: Probability Distributions Until Measured', color='white', fontsize=12, fontweight='bold')
+plt.tight_layout()`
+},
+{title:"🔧 Quantum Gates & Circuits",
+concept:`<h3>Circuits as Data Pipelines</h3>
+A quantum circuit transforms qubits step by step — exactly like a data pipeline:
+<br><code>raw → clean → normalize → encode → model</code>
+<br><code>|0⟩ → H → CNOT → Rz → measure</code>
+<br><br><strong>Essential gates:</strong>
+<ul style="margin:8px 0 8px 18px;line-height:2.1">
+<li><code>H</code> Hadamard — uniform superposition</li>
+<li><code>X</code> Pauli-X — flips |0⟩ ↔ |1⟩ (quantum NOT)</li>
+<li><code>Z</code> Pauli-Z — flips the phase, not the probability</li>
+<li><code>CNOT</code> — flips target if control qubit is |1⟩</li>
+</ul>
+<div class="an">🐾 <em>Unlike classical AND/OR gates, all quantum gates are <strong>reversible</strong> — you can always undo them and recover the original state. This is Landauer's principle. In data science terms: lossless, invertible feature transformations.</em></div>
+<h3>The Bell State: Entanglement</h3>
+H on qubit 0, then CNOT → <code>1/√2 (|00⟩ + |11⟩)</code>. Measuring one qubit instantly determines the other. Einstein called this "spooky action at a distance."`,
+sug:["What is entanglement in plain English?","Why are quantum gates reversible?","What does CNOT do exactly?"],
+code:`import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+def kron(A, B): return np.kron(A, B)
+
+I  = np.eye(2, dtype=complex)
+H  = np.array([[1,1],[1,-1]], dtype=complex) / np.sqrt(2)
+CNOT = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]], dtype=complex)
+
+psi = np.array([1,0,0,0], dtype=complex)
+print("Starting state |00>:")
+for lbl,a in zip(['|00>','|01>','|10>','|11>'], psi):
+    print(f"  {lbl}: {abs(a)**2:.0%}")
+
+psi = kron(H, I) @ psi
+print("\\nAfter H on qubit 0:")
+for lbl,a in zip(['|00>','|01>','|10>','|11>'], psi):
+    print(f"  {lbl}: {abs(a)**2:.0%}")
+
+psi = CNOT @ psi
+print("\\nAfter CNOT (Bell state):")
+for lbl,a in zip(['|00>','|01>','|10>','|11>'], psi):
+    print(f"  {lbl}: amplitude={a:.4f}, probability={abs(a)**2:.1%}")
+
+probs = np.abs(psi)**2
+labels = ['00','01','10','11']
+samples = np.random.choice(4, size=1000, p=probs)
+counts = {l: int(np.sum(samples==i)) for i,l in enumerate(labels)}
+
+print("\\n1000 measurements:")
+for s,c in counts.items():
+    bar = '█'*(c//25)
+    print(f"  |{s}>: {c:4d} {bar}")
+print("\\nOnly |00> and |11> — that's quantum entanglement! 🔗")
+
+fig, ax = plt.subplots(figsize=(7,4), facecolor='#0A1E3F')
+ax.set_facecolor('#0A1E3F'); ax.tick_params(colors='white')
+for s in ax.spines.values(): s.set_edgecolor('#00D9FF')
+colors = ['#00D9FF' if l in ['00','11'] else '#FF6B6B' for l in labels]
+ax.bar(labels, [counts[l] for l in labels], color=colors, edgecolor='white', width=0.4)
+ax.set_title('Bell State: Perfect Quantum Correlation\\n(|01> and |10> never appear — entanglement!)', color='white', fontsize=11)
+ax.set_xlabel('Measurement Outcome', color='white')
+ax.set_ylabel('Count (1000 shots)', color='white')
+plt.tight_layout()`
+},
+{title:"📊 Quantum Noise",
+concept:`<h3>Real Hardware is Noisy</h3>
+Everything so far ran on a <strong>perfect simulator</strong>. Real quantum hardware is fragile — qubits interact with their environment and errors accumulate.
+<br><br><strong>Four main error types:</strong>
+<ul style="margin:8px 0 8px 18px;line-height:2.3">
+<li>🔴 <strong>Depolarizing noise</strong> — random gate errors <small style="color:#94a3b8">(DS: label noise)</small></li>
+<li>🟠 <strong>Decoherence (T1/T2)</strong> — qubits lose quantum state over time <small style="color:#94a3b8">(DS: feature drift)</small></li>
+<li>🟡 <strong>Readout error</strong> — detector records wrong value <small style="color:#94a3b8">(DS: sensor miscalibration)</small></li>
+<li>🟣 <strong>Crosstalk</strong> — nearby qubits interfere <small style="color:#94a3b8">(DS: correlated noise)</small></li>
+</ul>
+<div class="an">🐾 <em>IBM's Eagle/Heron processors achieve &lt;0.1% two-qubit gate error rates — best in the industry. Quantum error correction is the key research frontier to enable fault-tolerant quantum computing.</em></div>`,
+sug:["What are T1 and T2 times?","How does IBM fight noise on real hardware?","What is quantum error correction?"],
+code:`import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
+np.random.seed(42)
+
+def simulate_bell_noisy(p, shots=1000):
+    labels = ['00','01','10','11']
+    counts = {l:0 for l in labels}
+    I = np.eye(2, dtype=complex)
+    H = np.array([[1,1],[1,-1]], dtype=complex) / np.sqrt(2)
+    CNOT = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]], dtype=complex)
+    HI = np.kron(H, I)
+    for _ in range(shots):
+        psi = np.array([1,0,0,0], dtype=complex)
+        psi = HI @ psi
+        if np.random.random() < p:
+            psi = np.eye(4)[np.random.randint(4)].astype(complex)
+        psi = CNOT @ psi
+        if np.random.random() < p:
+            psi = np.eye(4)[np.random.randint(4)].astype(complex)
+        probs = np.abs(psi)**2
+        probs /= probs.sum()
+        counts[labels[np.random.choice(4, p=probs)]] += 1
+    return counts
+
+labels = ['00','01','10','11']
+errors = [0.00, 0.03, 0.08, 0.15]
+print(f"{'Error Rate':>12} | {'|00>':>6} | {'|01>':>6} | {'|10>':>6} | {'|11>':>6} | Level")
+print("-"*58)
+for p in errors:
+    c = simulate_bell_noisy(p, 500)
+    lvl = "Perfect" if p==0 else "Low" if p<0.05 else "Medium" if p<0.12 else "High"
+    print(f"{p:>12.0%} | {c['00']:>6} | {c['01']:>6} | {c['10']:>6} | {c['11']:>6} | {lvl}")
+
+c_perf = simulate_bell_noisy(0.00, 1000)
+c_noisy = simulate_bell_noisy(0.08, 1000)
+
+fig, (ax1,ax2) = plt.subplots(1,2,figsize=(10,4),facecolor='#0A1E3F')
+for ax,data,title in zip([ax1,ax2],[c_perf,c_noisy],
+    ['Perfect Simulator','Noisy (8% gate error — like real hardware)']):
+    ax.set_facecolor('#0A1E3F'); ax.tick_params(colors='white')
+    for s in ax.spines.values(): s.set_edgecolor('#00D9FF')
+    colors = ['#00D9FF' if l in ['00','11'] else '#FF6B6B' for l in labels]
+    ax.bar(labels, [data[l] for l in labels], color=colors, edgecolor='white', width=0.4)
+    ax.set_title(title, color='white', fontsize=10)
+    ax.set_xlabel('State', color='white'); ax.set_ylabel('Counts', color='white')
+plt.suptitle('Quantum Noise: Perfect vs Real Hardware (Red = errors)', color='white', fontsize=11, fontweight='bold')
+plt.tight_layout()`
+},
+{title:"🚀 QAOA — Your First Quantum Algorithm",
+concept:`<h3>Quantum Approximate Optimization Algorithm</h3>
+QAOA solves <strong>combinatorial optimization</strong> — finding the best solution from an exponentially large set.
+<br><br><strong>The Max-Cut Problem:</strong> Split graph nodes into two groups to maximize edges between groups. Applications: circuit design, portfolio optimization, drug discovery, logistics.
+<br><br><strong>Why it's hard classically:</strong>
+<ul style="margin:8px 0 8px 18px;line-height:2.1">
+<li>N=20 nodes → 1,048,576 partitions to brute-force</li>
+<li>N=50 nodes → over 1 quadrillion partitions</li>
+<li>N=300 nodes → completely intractable</li>
+</ul>
+<div class="an">🐾 <em>QAOA is like gradient descent but for exponential search spaces. It puts all 2^N solutions in superposition simultaneously, then uses alternating "cost" and "mixer" layers to concentrate probability on the good ones. Classical gradient descent gets stuck in local minima — QAOA explores the full quantum landscape.</em></div>
+<h3>The QAOA Pipeline</h3>
+Problem → Ising Hamiltonian → Parameterized circuit → Classical optimizer (COBYLA) → Measure best solution`,
+sug:["What is a Hamiltonian?","Why does QAOA beat brute force?","When would I use QAOA in real life?"],
+code:`import numpy as np
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from scipy.optimize import minimize
+
+np.random.seed(42)
+
+edges = [(0,1),(1,2),(2,3),(3,0),(0,2)]
+n = 4
+
+def cut_value(bits):
+    return sum(1 for u,v in edges if bits[u] != bits[v])
+
+best_cut, best_p = 0, None
+for i in range(2**n):
+    bits = [int(b) for b in format(i, f'0{n}b')]
+    c = cut_value(bits)
+    if c > best_cut:
+        best_cut, best_p = c, bits[:]
+print(f"Graph: {n} nodes, {len(edges)} edges")
+print(f"Brute force checks {2**n} partitions")
+print(f"Optimal partition: {best_p}  cut={best_cut}/{len(edges)}")
+
+def qaoa_state(gamma, beta):
+    psi = np.ones(2**n, dtype=complex) / np.sqrt(2**n)
+    for i in range(2**n):
+        bits = [int(b) for b in format(i, f'0{n}b')]
+        psi[i] *= np.exp(-1j * cut_value(bits) * gamma)
+    for q in range(n):
+        new_psi = np.zeros(2**n, dtype=complex)
+        cos_b, sin_b = np.cos(beta), np.sin(beta)
+        for i in range(2**n):
+            bits = list(format(i, f'0{n}b'))
+            flipped = bits.copy(); flipped[q] = '1' if bits[q]=='0' else '0'
+            j = int(''.join(flipped), 2)
+            new_psi[i] += cos_b * psi[i]
+            new_psi[j] += -1j * sin_b * psi[i]
+        psi = new_psi
+    return psi
+
+def objective(params):
+    psi = qaoa_state(params[0], params[1])
+    probs = np.abs(psi)**2
+    return -sum(probs[i]*cut_value([int(b) for b in format(i,f'0{n}b')]) for i in range(2**n))
+
+print("\\nOptimizing QAOA parameters...")
+result = minimize(objective, [0.5, 0.3], method='COBYLA', options={'maxiter':300})
+g, b_param = result.x
+print(f"Optimal γ={g:.3f}, β={b_param:.3f}")
+print(f"Expected cut: {-result.fun:.3f}  (optimal: {best_cut})")
+print(f"Approximation ratio: {-result.fun/best_cut:.1%}")
+
+psi_final = qaoa_state(g, b_param)
+probs = np.abs(psi_final)**2
+probs /= probs.sum()
+samples = np.random.choice(2**n, size=2000, p=probs)
+from collections import Counter
+cnt = Counter(samples)
+top6 = cnt.most_common(6)
+
+print("\\nTop sampled partitions:")
+for idx, c in top6:
+    bits = [int(b) for b in format(idx,f'0{n}b')]
+    cv = cut_value(bits)
+    mark = " ← OPTIMAL!" if cv==best_cut else ""
+    print(f"  {''.join(map(str,bits))}: {c/2000:.1%} probability  cut={cv}{mark}")
+
+labels2 = [''.join(format(idx,f'0{n}b')) for idx,_ in top6]
+vals = [c/2000 for _,c in top6]
+colors = ['#22C55E' if cut_value([int(b) for b in lbl])==best_cut else '#00D9FF' for lbl in labels2]
+
+fig, ax = plt.subplots(figsize=(8,4), facecolor='#0A1E3F')
+ax.set_facecolor('#0A1E3F'); ax.tick_params(colors='white')
+for s in ax.spines.values(): s.set_edgecolor('#00D9FF')
+ax.barh(range(len(labels2)), vals, color=colors, edgecolor='white')
+ax.set_yticks(range(len(labels2)))
+ax.set_yticklabels(labels2, color='white', fontfamily='monospace', fontsize=10)
+ax.set_xlabel('Probability', color='white')
+ax.set_title('QAOA Output: Green = Optimal Solutions 🎯', color='white', fontsize=11)
+plt.tight_layout()
+print("\\n🐻 QAOA worked! Green = optimal Max-Cut partitions.")`
+}];
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let py=null, curMs=0, curTab='concept', lastOut='', hist=[];
+
+// ── LOADING ───────────────────────────────────────────────────────────────────
+const LMSGS=["🐻 Bloch is waking up from hibernation...","🐾 Sniffing out NumPy and Matplotlib...","⚛️ Loading quantum simulation libraries...","🧠 Warming up the quantum circuits...","✨ Shaking the quantum honey jar...","🚀 Bloch-Bear is ready! Let's learn quantum!"];
+
+async function boot(){
+  const pb=document.getElementById('pb'),lm=document.getElementById('lmsg');
+  const sp=(p,t)=>{pb.style.width=p+'%';lm.textContent=t;};
+  sp(5,LMSGS[0]);
+  try{
+    py=await loadPyodide({indexURL:"https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"});
+    sp(30,LMSGS[1]);
+    await py.loadPackage(["numpy","matplotlib"]);
+    sp(60,LMSGS[2]);
+    await py.loadPackage("micropip");
+    await py.runPythonAsync(`import micropip; await micropip.install(['scipy'])`);
+    sp(85,LMSGS[3]);
+    await py.runPythonAsync(`import matplotlib; matplotlib.use('Agg'); import numpy as np`);
+    sp(100,LMSGS[5]);
+    await new Promise(r=>setTimeout(r,700));
+    document.getElementById('loading').style.opacity='0';
+    setTimeout(()=>{
+      document.getElementById('loading').style.display='none';
+      document.getElementById('app').style.display='flex';
+      selMs(0);
+      bloch("Hey there, future quantum wizard! I'm **Bloch**, your warm and fuzzy quantum bear guide! 🐻\n\nWe'll explore **5 milestones** together — from why quantum computing exists, all the way to running your first QAOA optimization algorithm.\n\nLet's paws and start with Milestone 1! Click **📖 Concept** to read, then **💻 Code** to run real quantum simulations right in your browser. And in Milestone 2, don't miss the **interactive 3D Bloch sphere**! 🐾\n\n*Every quantum expert was once a confused beginner. Even this bear!* 🐻");
+    },700);
+  }catch(e){lm.style.color='#FF6B6B';lm.textContent='❌ '+e.message+' — Please refresh.';}
+}
+
+// ── MILESTONE ─────────────────────────────────────────────────────────────────
+function selMs(i){
+  curMs=i;
+  document.querySelectorAll('.mb').forEach((b,j)=>b.classList.toggle('active',j===i));
+  const m=MS[i];
+  document.getElementById('pt').textContent=m.title;
+  document.getElementById('cb').innerHTML=m.concept;
+  document.getElementById('ce').value=m.code;
+  document.getElementById('ob').textContent='Click "▶ Run Code 🐾" to execute! ⚛️';
+  document.getElementById('ob').className='ob';
+  document.getElementById('oi').style.display='none';
+  lastOut='';
+  const sd=document.getElementById('sl');
+  sd.innerHTML=m.sug.map(q=>`<button class="sbtn" onclick="askQ(${JSON.stringify(q)})">💬 ${q}</button>`).join('');
+  showTab(curTab);
+}
+
+function showTab(t){
+  curTab=t;
+  document.getElementById('tc').style.display=t==='concept'?'block':'none';
+  document.getElementById('tcd').style.display=t==='code'?'flex':'none';
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',i===(t==='concept'?0:1)));
+}
+
+function copyCode(){
+  navigator.clipboard.writeText(document.getElementById('ce').value);
+  const b=document.querySelector('.cbtn');
+  b.textContent='✓ Copied!';b.style.color='#22C55E';
+  setTimeout(()=>{b.textContent='Copy';b.style.color='';},2000);
+}
+
+// ── RUN CODE ──────────────────────────────────────────────────────────────────
+async function runCode(){
+  if(!py)return;
+  const code=document.getElementById('ce').value;
+  const ob=document.getElementById('ob'),oi=document.getElementById('oi'),rb=document.getElementById('rb');
+  rb.disabled=true;rb.textContent='⏳ Running...';
+  ob.className='ob';ob.textContent='Executing quantum simulation...';
+  oi.style.display='none';
+  try{
+    await py.runPythonAsync(`
+import sys,io,matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+plt.close('all')
+sys.stdout=io.StringIO()
+sys.stderr=io.StringIO()
+`);
+    await py.runPythonAsync(code);
+    const txt=py.runPython("sys.stdout.getvalue()");
+    ob.textContent=txt||'✅ Code executed (no text output)';
+    lastOut=txt;
+    try{
+      await py.runPythonAsync(`
+import matplotlib.pyplot as plt,io as _io,base64 as _b64
+_buf=_io.BytesIO()
+if plt.get_fignums():
+    plt.savefig(_buf,format='png',bbox_inches='tight',facecolor='#0A1E3F',dpi=110)
+    _buf.seek(0);_img=_b64.b64encode(_buf.read()).decode();plt.close('all')
+else:_img=""
+`);
+      const d=py.globals.get('_img');
+      if(d){oi.src='data:image/png;base64,'+d;oi.style.display='block';}
+    }catch(_){}
+  }catch(e){
+    ob.className='ob err';ob.textContent='❌ '+e.message;
+    bloch("Oops! Don't worry — errors are just Python's way of teaching us! 🐻\n\nThe error:\n`"+e.message+"`\n\nAsk me what it means! 🐾");
+  }finally{rb.disabled=false;rb.textContent='▶ Run Code 🐾';}
+}
+
+function askOut(){
+  const q=`I just ran the "${MS[curMs].title}" code. Output:\n\n${lastOut||'(not run yet)'}\n\nWhat does this mean?`;
+  askQ(q);showTab('concept');
+}
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+function bloch(txt){
+  const el=document.createElement('div');
+  el.className='msg';
+  el.innerHTML=`<div class="mav">🐻</div><div class="bub">${fmt(txt)}</div>`;
+  document.getElementById('msgs').appendChild(el);
+  document.getElementById('msgs').scrollTop=99999;
+}
+function userMsg(txt){
+  const el=document.createElement('div');
+  el.className='msg u';
+  el.innerHTML=`<div class="bub">${esc(txt)}</div>`;
+  document.getElementById('msgs').appendChild(el);
+  document.getElementById('msgs').scrollTop=99999;
+}
+function typingEl(){
+  const el=document.createElement('div');
+  el.className='msg';el.id='typ';
+  el.innerHTML=`<div class="mav">🐻</div><div class="typ"><div class="td"></div><div class="td"></div><div class="td"></div></div>`;
+  document.getElementById('msgs').appendChild(el);
+  document.getElementById('msgs').scrollTop=99999;
+  return el;
+}
+function fmt(t){return esc(t).replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\*(.*?)\*/g,'<em>$1</em>').replace(/`(.*?)`/g,'<code>$1</code>').replace(/\n/g,'<br>');}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function askQ(q){document.getElementById('ci').value=q;send();}
+
+async function send(){
+  const inp=document.getElementById('ci');
+  const txt=inp.value.trim();if(!txt)return;
+  inp.value='';userMsg(txt);hist.push({role:'user',content:txt});
+  const typ=typingEl();document.getElementById('sb').disabled=true;
+  const sys=`You are Bloch, a warm and encouraging bear who teaches quantum computing to beginners. You are the AI tutor inside Bloch-Bear, built for the IBM quantum hackathon.
+PERSONALITY: You are a bear. Warm, patient, genuinely excited. Use bear puns: "Let's paws...", "Beary good!", "Unbearably interesting!". Celebrate wins. Never make students feel dumb. Sign off with 🐻. Catchphrase: "Every quantum expert was once a confused beginner. Even this bear! 🐻"
+TEACHING: Always start with a real-world analogy before math. Analogies: qubits=Bernoulli random variables, superposition=probability distribution, measurement=sampling, gates=reversible feature transforms, circuits=data pipelines, QAOA=probabilistic search. Assume zero quantum knowledge. Keep answers 3-4 sentences. End with encouraging question. Celebrate when students run code.
+CONTEXT: Student is on: ${MS[curMs].title}. Recent output: ${lastOut?lastOut.slice(0,300):'(not run yet)'}`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:sys,messages:hist.slice(-6)})
+    });
+    const d=await r.json();
+    const reply=d.content?.[0]?.text||"My quantum brain got noisy! Try again. 🐻";
+    hist.push({role:'assistant',content:reply});
+    typ.remove();bloch(reply);
+  }catch(e){typ.remove();bloch("Oops! Decoherence hit my brain! 📡 Try again. 🐻");}
+  document.getElementById('sb').disabled=false;
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('ci').addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}
+  });
+  boot();
+});
+
+// ── 3D BLOCH SPHERE ───────────────────────────────────────────────────────────
+let bsReady=false,bsRenderer,bsScene,bsCam,bsPivot,bsStateG,bsTheta_=50*Math.PI/180,bsPhi_=45*Math.PI/180,bsDrag=false,bsOx=0,bsOy=0,bsRotX=0.2,bsRotY=0.5,bsAuto=true,bsAF=null;
+
+function openSphere(){
+  document.getElementById('bs-overlay').classList.add('open');
+  if(!bsReady)initSphere();
+}
+function closeSphere(){
+  document.getElementById('bs-overlay').classList.remove('open');
+}
+
+function initSphere(){
+  const W=520,H=460;
+  const canvas=document.getElementById('bc');
+  canvas.width=W;canvas.height=H;
+  bsRenderer=new THREE.WebGLRenderer({canvas,antialias:true});
+  bsRenderer.setSize(W,H);bsRenderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  bsRenderer.setClearColor(0x07111f,1);
+  bsScene=new THREE.Scene();
+  bsCam=new THREE.PerspectiveCamera(42,W/H,0.1,100);
+  bsCam.position.set(2.8,1.8,2.8);bsCam.lookAt(0,0,0);
+  bsScene.add(new THREE.AmbientLight(0x4466aa,0.6));
+  const sun=new THREE.DirectionalLight(0xaaccff,1.4);sun.position.set(4,5,3);bsScene.add(sun);
+  const rim=new THREE.PointLight(0x00D9FF,0.7,8);rim.position.set(-2,1,-2);bsScene.add(rim);
+  const warm=new THREE.PointLight(0xffaa44,0.3,6);warm.position.set(2,-2,1);bsScene.add(warm);
+  bsPivot=new THREE.Group();bsScene.add(bsPivot);
+  const sGeo=new THREE.SphereGeometry(1,64,48);
+  bsPivot.add(new THREE.Mesh(sGeo,new THREE.MeshPhongMaterial({color:0x0d2550,emissive:0x040c1a,specular:0x33aacc,shininess:90,transparent:true,opacity:0.75})));
+  bsPivot.add(new THREE.Mesh(sGeo,new THREE.MeshBasicMaterial({color:0x1a3a6e,wireframe:true,transparent:true,opacity:0.18})));
+  function ring(axis){
+    const pts=[];
+    for(let i=0;i<=128;i++){const a=i/128*Math.PI*2;if(axis==='y')pts.push(new THREE.Vector3(Math.cos(a),0,Math.sin(a)));else if(axis==='x')pts.push(new THREE.Vector3(0,Math.cos(a),Math.sin(a)));else pts.push(new THREE.Vector3(Math.cos(a),Math.sin(a),0));}
+    bsPivot.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:0x1a3a6e,transparent:true,opacity:0.4})));
+  }
+  ring('y');ring('x');ring('z');
+  function ax(dir,col){
+    const m=new THREE.MeshPhongMaterial({color:col,emissive:col,emissiveIntensity:0.25,shininess:40});
+    const g=new THREE.Group();
+    const c=new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,2.9,8),m);
+    c.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());g.add(c);
+    const h=new THREE.Mesh(new THREE.ConeGeometry(0.045,0.14,8),m);
+    h.position.copy(dir.clone().multiplyScalar(1.45));
+    h.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.clone().normalize());g.add(h);
+    bsPivot.add(g);
+  }
+  ax(new THREE.Vector3(0,1,0),0x00D9FF);ax(new THREE.Vector3(1,0,0),0xFF6B6B);ax(new THREE.Vector3(0,0,1),0x22C55E);
+  function pole(y,col){
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.055,16,16),new THREE.MeshPhongMaterial({color:col,emissive:col,emissiveIntensity:0.3,shininess:60}));
+    m.position.y=y;bsPivot.add(m);
+  }
+  pole(1.08,0x00D9FF);pole(-1.08,0x7B3FA0);
+  bsStateG=new THREE.Group();
+  const stM=new THREE.MeshPhongMaterial({color:0xffd700,emissive:0xcc8800,emissiveIntensity:0.4,shininess:120});
+  const sc=new THREE.Mesh(new THREE.CylinderGeometry(0.022,0.022,1,10),stM);sc.position.y=0.5;bsStateG.add(sc);
+  const sh=new THREE.Mesh(new THREE.ConeGeometry(0.065,0.18,10),stM);sh.position.y=1.09;bsStateG.add(sh);
+  const dot=new THREE.Mesh(new THREE.SphereGeometry(0.04,12,12),new THREE.MeshPhongMaterial({color:0xffd700,emissive:0xffd700,emissiveIntensity:0.5}));
+  bsStateG.add(dot);bsPivot.add(bsStateG);
+  bsUpdateState();
+  const canvas2=document.getElementById('bc');
+  canvas2.addEventListener('mousedown',e=>{bsDrag=true;bsOx=e.clientX;bsOy=e.clientY;bsAuto=false;canvas2.style.cursor='grabbing';});
+  window.addEventListener('mouseup',()=>{bsDrag=false;if(document.getElementById('bc'))document.getElementById('bc').style.cursor='grab';});
+  window.addEventListener('mousemove',e=>{
+    if(!bsDrag)return;
+    bsRotY+=(e.clientX-bsOx)*0.012;bsRotX+=(e.clientY-bsOy)*0.012;
+    bsRotX=Math.max(-1.5,Math.min(1.5,bsRotX));
+    bsOx=e.clientX;bsOy=e.clientY;
+    bsPivot.rotation.x=bsRotX;bsPivot.rotation.y=bsRotY;
+  });
+  bsReady=true;
+  bsAnimate();
+}
+
+function bsUpdateState(){
+  if(!bsStateG)return;
+  const x=Math.sin(bsTheta_)*Math.cos(bsPhi_),y=Math.cos(bsTheta_),z=Math.sin(bsTheta_)*Math.sin(bsPhi_);
+  bsStateG.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),new THREE.Vector3(x,y,z).normalize());
+  document.getElementById('bs-state').textContent='|ψ⟩ = '+Math.cos(bsTheta_/2).toFixed(3)+'|0⟩ + e^{i'+Math.round(bsPhi_*180/Math.PI)+'°}·'+Math.sin(bsTheta_/2).toFixed(3)+'|1⟩';
+}
+
+function bsTheta(v){bsTheta_=parseFloat(v)*Math.PI/180;document.getElementById('vtheta').textContent=v+'°';bsUpdateState();}
+function bsPhi(v){bsPhi_=parseFloat(v)*Math.PI/180;document.getElementById('vphi').textContent=v+'°';bsUpdateState();}
+
+function posLbl(id,v3,ox,oy){
+  const v=v3.clone().applyQuaternion(bsPivot.quaternion);v.project(bsCam);
+  const W=520,H=460;
+  const el=document.getElementById(id);
+  el.style.left=((v.x+1)/2*W+ox)+'px';el.style.top=((1-v.y)/2*H+oy)+'px';
+}
+
+function bsAnimate(){
+  bsAF=requestAnimationFrame(bsAnimate);
+  if(bsAuto){bsRotY+=0.006;bsPivot.rotation.y=bsRotY;}
+  bsRenderer.render(bsScene,bsCam);
+  posLbl('bl0',new THREE.Vector3(0,1.2,0),-12,-8);
+  posLbl('bl1',new THREE.Vector3(0,-1.2,0),-12,2);
+  posLbl('blx',new THREE.Vector3(1.5,0,0),-4,-6);
+  posLbl('bly',new THREE.Vector3(0,0,1.5),-4,-6);
+}
+</script>
+</body>
+</html>
